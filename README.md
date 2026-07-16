@@ -29,25 +29,34 @@
 - JSON local data storage
 
 ## Project Structure
+
+```
 app/
 └── src/main/java/com/odultalk/apk/
-                                    ├── audio/
-                                    │    └── AudioPlayer.kt
-                                    ├── data/
-                                    │    ├── local/
-                                    │    │    └── FavoritesStore.kt
-                                    │    ├── models/
-                                    │    │    └── Phrase.kt
-                                    │    └── repository/
-                                    │         └── PhraseRepository.kt
-                                    ├── ui/
-                                    │    ├── components/
-                                    │    │    ├── PhraseCard.kt
-                                    │    │    └── TopBar.kt
-                                    │    ├── data/
-                                    │    │    └── CategoryIcons.kt
-                                    │    ├── screens/
-                                    │    │    ├── CategoriesScreen.kt
-                                    │    │    └── PhrasesScreen.kt
-                                    │    ├── AppScreen.kt
-                                    │    └── Screen.kt
+
+    ├── audio/
+    │   └── AudioPlayer.kt
+
+    ├── data/
+    │   ├── local/
+    │   │   └── FavoritesStore.kt
+    │   ├── models/
+    │   │   └── Phrase.kt
+    │   └── repository/
+    │       └── PhraseRepository.kt
+
+    ├── ui/
+    │   ├── components/
+    │   │   ├── PhraseCard.kt
+    │   │   └── TopBar.kt
+    │   │
+    │   ├── data/
+    │   │   └── CategoryIcons.kt
+    │   │
+    │   ├── screens/
+    │   │   ├── CategoriesScreen.kt
+    │   │   └── PhrasesScreen.kt
+    │   │
+    │   ├── AppScreen.kt
+    │   └── Screen.kt
+```
