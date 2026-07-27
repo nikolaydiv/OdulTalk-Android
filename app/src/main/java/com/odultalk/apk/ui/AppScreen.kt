@@ -23,6 +23,14 @@ import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalContext
 import com.odultalk.apk.audio.AudioPlayer
 import com.odultalk.apk.R
+import androidx.compose.animation.AnimatedVisibility
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.derivedStateOf
 
 @Composable
 fun AppScreen(
@@ -42,11 +50,36 @@ fun AppScreen(
     var showSplash by remember { mutableStateOf(true) }
 
     val context = LocalContext.current
-    val audioPlayer = remember { AudioPlayer(context) }
+    val isPlayingAudio = remember { mutableStateOf<String?>(null)}
+    val audioPlayer = remember {
+        AudioPlayer(context) {
+            isPlayingAudio.value = null
+        }
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+
+        val observer = LifecycleEventObserver { _, event ->
+
+            if (event == Lifecycle.Event.ON_STOP) {
+                audioPlayer.stop()
+                isPlayingAudio.value = null
+            }
+
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     LaunchedEffect(Unit) {
         favorites.addAll(favoritesStore.load())
-        delay(800)
+        delay(1000)
         showSplash = false
     }
 
@@ -133,8 +166,15 @@ fun AppScreen(
                                     onBack = { resetToCategories() },
                                     query = query,
                                     onPlayAudio = { file ->
-                                        audioPlayer.play(file)
-                                    }
+                                        if (isPlayingAudio.value == file) {
+                                            audioPlayer.stop()
+                                            isPlayingAudio.value = null
+                                        } else {
+                                            audioPlayer.play(file)
+                                            isPlayingAudio.value = file
+                                        }
+                                    },
+                                    isPlayingAudio = isPlayingAudio.value
                                 )
 
                             } else {
@@ -163,7 +203,16 @@ fun AppScreen(
                                 onToggleFavorite = { toggleFavorite(it) },
                                 onBack = { resetToCategories() },
                                 query = query,
-                                onPlayAudio = { file -> audioPlayer.play(file)}
+                                onPlayAudio = { file ->
+                                    if (isPlayingAudio.value == file) {
+                                        audioPlayer.stop()
+                                        isPlayingAudio.value = null
+                                    } else {
+                                        audioPlayer.play(file)
+                                        isPlayingAudio.value = file
+                                    }
+                                },
+                                isPlayingAudio = isPlayingAudio.value
                             )
                         }
 
@@ -177,7 +226,17 @@ fun AppScreen(
                                 onToggleFavorite = { toggleFavorite(it) },
                                 onBack = { resetToCategories() },
                                 query = query,
-                                onPlayAudio = { file -> audioPlayer.play(file)}
+                                onPlayAudio = { file ->
+                                    if (isPlayingAudio.value == file) {
+                                        audioPlayer.stop()
+                                        isPlayingAudio.value = null
+                                    } else {
+                                        audioPlayer.play(file)
+                                        isPlayingAudio.value = file
+                                    }
+                                },
+                                isPlayingAudio = isPlayingAudio.value,
+                                emptyMessage = "🤍\n\nИзбранное пусто\n\nДобавляйте фразы,\nнажимая ❤️"
                             )
                         }
                     }
@@ -189,19 +248,25 @@ fun AppScreen(
         //   SPLASH OVERLAY
         // =========================
         if (showSplash) {
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center
+            AnimatedVisibility(
+                visible = showSplash,
+                enter = fadeIn(),
+                exit = fadeOut()
             ) {
 
-                Image(
-                    painter = painterResource(id = R.drawable.splash),
-                    contentDescription = "Splash",
-                    modifier = Modifier.size(180.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    Image(
+                        painter = painterResource(id = R.drawable.splash),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxWidth(0.8f)
+                    )
+                }
             }
         }
 
@@ -221,26 +286,79 @@ fun AppScreen(
                     Text("О приложении")
                 },
                 text = {
+
+                    val listState = rememberLazyListState()
+
+                    val showScrollHint by remember {
+                        derivedStateOf {
+                            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+
+                            lastVisibleItem != null && lastVisibleItem.index < listState.layoutInfo.totalItemsCount - 1
+                        }
+                    }
+
                     Column {
 
-                        Text("OdulTalk - русско-юкагирский разговорник")
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.heightIn(max = 420.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                            item {
+                                Text(
+                                    "Юкагирский (лесной) язык — один из древнейших языков Севера, сохранивший мудрость и культуру лесных юкагиров. Сегодня на нём говорят лишь единицы. Для молодёжи родной язык часто остаётся недостаточно доступным."
+                                )
+                            }
 
-                        Text("Версия: 1.0")
+                            item {
+                                Text(
+                                    "И мы создали приложение OdulTalk, чтобы вернуть юкагирский язык в повседневную жизнь. Это живой разговорник для тех, кто хочет понимать своих близких и говорить на языке предков здесь и сейчас."
+                                )
+                            }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                            item {
+                                Text("С помощью OdulTalk вы можете:")
+                            }
 
-                        Divider()
+                            item {
+                                Text("• слушать живую речь — знакомьтесь с правильным произношением от носителя языка;")
+                            }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                            item {
+                                Text("• учить фразы для жизни — от приветствия до разговора в магазине или школе;")
+                            }
 
-                        Text("Контакты")
+                            item {
+                                Text("• сохранять наследие вместе — помогите детям и внукам услышать голос своей родной культуры.")
+                            }
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                            item {
+                                Text(
+                                    "Наш проект объединяет село Нелемное со всем миром. Он доступен каждому жителю Якутии, исследователю, педагогу и любому человеку, которому небезразличны языки коренных народов России."
+                                )
+                            }
 
-                        Text("Email: nikolaydiv@gmail.com")
-                        Text("Telegram: @nickdiv")
+                            item {
+                                Text(
+                                    "Давайте сохраним звучание юкагирского языка вместе."
+                                )
+                            }
+                        }
+
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
+
+                        if (showScrollHint) {
+                            Text(
+                                text = "⬇ Прокрутите вниз",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             )

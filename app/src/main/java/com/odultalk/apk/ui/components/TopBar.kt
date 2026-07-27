@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.statusBarsPadding
 
 @Composable
 fun TopBar(
@@ -22,7 +23,8 @@ fun TopBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .statusBarsPadding()
+            .padding(horizontal = 12.dp)
     ) {
 
         // ================= HEADER =================
@@ -38,7 +40,7 @@ fun TopBar(
             )
 
             IconButton(onClick = onSettingsClick) {
-                Text("⚙️")
+                Text("ℹ️")
             }
         }
 

@@ -2,44 +2,47 @@ package com.odultalk.apk.audio
 
 import android.content.Context
 import android.media.MediaPlayer
-import android.provider.MediaStore
 
-class AudioPlayer(private val context: Context) {
+class AudioPlayer(
+    private val context: Context,
+    private val onComplete: () -> Unit
+    ) {
 
-    private var player: MediaPlayer? = null
-    private var currentFile: String? = null
+        private var player: MediaPlayer? = null
+        private var currentFile: String? = null
 
-    fun play(fileName: String) {
+        fun play(fileName: String) {
 
-        if (currentFile == fileName && player?.isPlaying == true) {
+            if (currentFile == fileName && player?.isPlaying == true) {
+                stop()
+                return
+            }
+
             stop()
-            return
+
+            val resourceName = "audio_$fileName"
+
+            val resId = context.resources.getIdentifier(
+                resourceName,
+                "raw",
+                context.packageName
+            )
+
+            if (resId == 0) return
+
+            player = MediaPlayer.create(context, resId)
+            currentFile = fileName
+            player?.start()
+
+            player?.setOnCompletionListener {
+                stop()
+                onComplete()
+            }
         }
 
-        stop()
-
-        val resId = context.resources.getIdentifier(
-            fileName,
-            "raw",
-            context.packageName
-        )
-
-        if (resId == 0) return
-
-        player = MediaPlayer.create(context, resId)
-        player?.start()
-
-        player?.setOnCompletionListener {
-            stop()
+        fun stop() {
+            player?.release()
+            player = null
+            currentFile = null
         }
     }
-
-    fun stop() {
-        player?.release()
-        player = null
-    }
-
-    fun isPlaying(fileName: String): Boolean {
-        return currentFile == fileName && player?.isPlaying == true
-    }
-}

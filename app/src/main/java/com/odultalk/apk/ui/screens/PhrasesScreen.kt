@@ -11,6 +11,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.odultalk.apk.data.models.Phrase
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun PhraseScreen(
@@ -19,7 +20,9 @@ fun PhraseScreen(
     onToggleFavorite: (Int) -> Unit,
     onBack: () -> Unit,
     query: String,
-    onPlayAudio: (String) -> Unit
+    onPlayAudio: (String) -> Unit,
+    isPlayingAudio: String?,
+    emptyMessage: String = "Ничего не найдено"
 ) {
 
     Column(
@@ -51,7 +54,7 @@ fun PhraseScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Ничего не найдено",
+                            text = emptyMessage,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -103,7 +106,9 @@ fun PhraseScreen(
                                         }
                                     },
                                     modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.SemiBold
+                                    )
                                 )
 
                                 //  AUDIO
@@ -115,14 +120,18 @@ fun PhraseScreen(
                                     modifier = Modifier.size(44.dp)
                                 ) {
                                     Text(
-                                        text = "🔊",
-                                        style = MaterialTheme.typography.bodyLarge,
+                                        text = if (phrase.audio == isPlayingAudio) "⏹️" else "🔊",
+                                        style = MaterialTheme.typography.titleMedium,
                                         color = if (hasAudio)
                                             MaterialTheme.colorScheme.onSurface
                                         else
                                             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                                     )
                                 }
+
+                                Spacer(
+                                    modifier = Modifier.width(4.dp)
+                                )
 
                                 //  FAVORITE
                                 IconButton(
@@ -157,7 +166,7 @@ fun PhraseScreen(
                                         append(phrase.ykg)
                                     }
                                 },
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
